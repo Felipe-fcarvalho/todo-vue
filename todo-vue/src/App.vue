@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
 import Cabecalho from './components/Cabecalho.vue';
 import Formulario from './components/Formulario.vue';
 import ListaDeTarefas from './components/ListaDeTarefas.vue';
@@ -8,48 +8,37 @@ const estado = reactive({
   filtro: 'todas',
   tarefaTemp: '',
   tarefas: [
-    {
-      titulo: 'Estudar ES6',
-      finalizada: false,
-    },
-    {
-      titulo: 'Estudar SASS',
-      finalizada: false,
-    },
-    {
-      titulo: 'Academia',
-      finalizada: true,
-    },
-    
+    { id: 1, titulo: 'Estudar ES6', finalizada: false },
+    { id: 2, titulo: 'Estudar SASS', finalizada: false},
+    { id: 3, titulo: 'Academia', finalizada: true},
   ]
 })
 
-const getTarefasPendentes = () => {
-  return estado.tarefas.filter(tarefa => !tarefa.finalizada)
-}
+const tarefasPendentes = computed(() => estado.tarefas.filter(tarefa => !tarefa.finalizada))
 
-const getTarefasFinalizadas = () => {
-  return estado.tarefas.filter(tarefa => tarefa.finalizada)
-}
+const tarefasFinalizadas = computed(() => estado.tarefas.filter(tarefa => tarefa.finalizada))
 
-const getTarefasFiltradas = () => {
-  const { filtro } = estado;
-
-  switch (filtro) {
+const tarefasFiltradas = computed(() => {
+  switch (estado.filtro) {
     case 'pendentes': 
-      return getTarefasPendentes();
+      return tarefasPendentes.value;
     case 'finalizadas':
-      return getTarefasFinalizadas();
+      return tarefasFinalizadas.value;
     default:
       return estado.tarefas
   }
-}
+})
 
 const cadastraTarefa = () => {
+  const titulo = estado.tarefaTemp.trim()
+  if(!titulo) return
+  
   const tarefaNova = {
-    titulo: estado.tarefaTemp,
+    id: Date.now(),
+    titulo,
     finalizada: false,
   }
+
   estado.tarefas.push(tarefaNova);
   estado.tarefaTemp = '';
 }
@@ -57,9 +46,15 @@ const cadastraTarefa = () => {
 
 <template>
   <div class="container">
-    <Cabecalho :tarefas-pendentes="getTarefasPendentes().length"/>
-    <Formulario :trocar-filtro="evento => estado.filtro = evento.target.value" :tarefa-temp="estado.tarefaTemp" :edita-tarefa-temp="evento => estado.tarefaTemp = evento.target.value" :cadastra-tarefa="cadastraTarefa"/>
-    <ListaDeTarefas :tarefas="getTarefasFiltradas()"/>
+    <Cabecalho :tarefas-pendentes="tarefasPendentes.length"/>
+    <Formulario 
+      :tarefa-temp="estado.tarefaTemp" 
+      :filtro="estado.filtro"
+      @atualiza-tarefa="valor => estado.tarefaTemp = valor"
+      @muda-filtro="valor => estado.filtro = valor" 
+      @submit-tarefa="cadastraTarefa"
+    />
+    <ListaDeTarefas :tarefas="tarefasFiltradas"/>
   </div>
 </template>
 

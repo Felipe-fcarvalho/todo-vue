@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps(['tarefasPendentes'])
+const props = defineProps({ tarefasPendentes: Number })
 </script>
 
 <template>
